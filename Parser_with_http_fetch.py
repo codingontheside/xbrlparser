@@ -1,10 +1,32 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
+import feedparser
+import urllib
 from lxml import etree as ET
 import re, urllib.request
 
 #import xml.etree.ElementTree as ET
+
+def gatherURL():
+	RSScontents = urllib.request.urlopen("https://www.sec.gov/Archives/edgar/usgaap.rss.xml", )
+
+	RSStree = ET.parse(RSScontents)
+    # get root elememen 
+	RSSroot = RSStree.getroot()
+
+	URLset = []
+
+	for RSSchild in RSSroot.iter('{http://www.sec.gov/Archives/edgar}xbrlFile'):
+		description = RSSchild.attrib.get('{http://www.sec.gov/Archives/edgar}description')
+		if description == 'XBRL INSTANCE DOCUMENT':
+			for RSSchild2 in RSSchild.iter('*'):
+				XBRL_URL = RSSchild2.attrib.get('{http://www.sec.gov/Archives/edgar}url')
+				URLset.append(XBRL_URL)
+		else:
+			continue
+	return URLset;
+
 
 def fetchXML(URL):
 	"will fetch the an MMRL file from a URL"
@@ -113,15 +135,23 @@ def parseXML(xmlfile):
 			#print(startDatesize)
 
 def main():
-	print('This is the data for AAPL')
-	financial_data = parseXML('./aapl-20150627.xml')
-	print('This is the data for UNP')
-	financial_data = parseXML('./UNP.xml')
-	print('This is the data for Nike')
-	financial_data = parseXML('./nke-20180831.xml')
-	print('This is fetched data')
-	XMLfile = fetchXML('http://www.sec.gov/Archives/edgar/data/1543739/000107878218001443/apty-20181031.xml')[0]
-	financial_data = parseXML(XMLfile)
+	#print('This is the data for AAPL')
+	#financial_data = parseXML('./aapl-20150627.xml')
+	#print('This is the data for UNP')
+	#financial_data = parseXML('./UNP.xml')
+	#print('This is the data for Nike')
+	#financial_data = parseXML('./nke-20180831.xml')
+	#print('This is fetched data')
+	#XMLfile = fetchXML('http://www.sec.gov/Archives/edgar/data/1543739/000107878218001443/apty-20181031.xml')[0]
+	#print(XMLfile)
+	#financial_data = parseXML(XMLfile)
+	financial_data = gatherURL()
+	for x in financial_data:
+		print('This is the URL:')
+		XMLfile = fetchXML(x)[0]
+		print(x)
+		parseXML(XMLfile)
+
 
 if __name__ == "__main__": 
   
