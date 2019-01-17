@@ -1,0 +1,23 @@
+financials_list = [\
+'GrossProfit',\
+'CostOfRevenue',\
+'OperatingRevenue',\
+'Revenues',\
+'OperatingIncomeLoss',\
+'NetIncomeLoss',\
+'ResearchAndDevelopment',\
+'OperatingExpenses',\
+'AssetsCurrent',\
+'Assets',\
+'LiabilitiesCurrent',\
+'Liabilities',\
+'CashAndCashEquivalentsAtCarryingValue',\
+'LongTermDebtCurrent',\
+'TotalCash',\
+'TotalDebt',\
+'ShareholderEquity',\
+'CashAndCashEquivalentsPeriodIncreaseDecrease',\
+'CommonStockDividendsPerShareDeclared',\
+'CommonStockSharesOutstanding',\
+'SharesOutstanding',\
+'EarningsPerShareBasic']

@@ -7,6 +7,7 @@ from lxml import etree as ET
 import re, urllib.request
 import json
 from datetime import datetime as DT
+from initialVariables import financials_list
 
 #import xml.etree.ElementTree as ET
 
@@ -47,6 +48,10 @@ def gatherURL():
 						companyValues['URL'] = rootchild2.attrib.get('{http://www.sec.gov/Archives/edgar}url')
 					elif description == 'EX-101.INS':
 						companyValues['URL'] = rootchild2.attrib.get('{http://www.sec.gov/Archives/edgar}url')
+					elif description == 'XBRL FILE; INSTANCE':
+						companyValues['URL'] = rootchild2.attrib.get('{http://www.sec.gov/Archives/edgar}url')
+					elif description == 'XBRL INSTANCE FILE':
+						companyValues['URL'] = rootchild2.attrib.get('{http://www.sec.gov/Archives/edgar}url')		
 					else:
 						continue
 			companyInfo[companyName] = companyValues
@@ -137,8 +142,8 @@ def parseXML(perioddate, xmlfile):
 	except IndexError:
 		raise XBRLParserException('problem getting contexts')
 	financialValues = []
-	ValuesWeCareAbout = ['NetIncomeLoss', 'ProfitLoss', 'EarningsPerShareBasic','AssetsCurrent','LiabilitiesCurrent', 'CommonStockDividendsPerShareDeclared','CommonStockSharesOutstanding']
-	for x in ValuesWeCareAbout:
+	#ValuesWeCareAbout = ['NetIncomeLoss', 'ProfitLoss', 'EarningsPerShareBasic','AssetsCurrent','LiabilitiesCurrent', 'CommonStockDividendsPerShareDeclared','CommonStockSharesOutstanding']
+	for x in financials_list:
 		startDatesize = 0
 		category = []
 		categoryValues = []
@@ -171,7 +176,7 @@ def parseXML(perioddate, xmlfile):
 						#financialValues.append([x,child.text,startDate,endDate])
 						#print(x + " is = " + child.text + ' : ' +  startDate + ' : ' + endDate)
 			except:
-				print('some sort of error')
+				print('some sort of error' + xmlfile)
 			startDatesize = startDatesize + 1
 			#print(startDatesize)
 		category.append([x,categoryValues])	
@@ -186,7 +191,13 @@ def main():
 
 	#financial_data = parseXML(XMLfile)
 	financial_data = {}
-	financial_data= gatherURL()
+	#financial_data= gatherURL()
+	financial_data = {"LINDSAY CORP": {
+        "FormType": "10-Q",
+        "FilingDate": "01/09/2019",
+        "CIKNumber": "0000836157",
+        "Period": "20181130",
+        "URL": "http://www.sec.gov/Archives/edgar/data/836157/000156459019000460/lnn-20181130.xml"}}
 	#financial_data = [(['TARGET CORP', '10-Q', '08/27/2010', '0000027419', '20100731'], 'https://www.sec.gov/Archives/edgar/data/27419/000110465910046222/tgt-20100731.xml')]
 	fullReport = {}
 	for key, values in financial_data.items():
@@ -202,7 +213,7 @@ def main():
 			symbol['AIC'] = values['CIKNumber']
 			symbol['PeriodEnd'] = values['Period']
 			symbol['XBRL URL'] = values['URL']
-			print(z)
+			#print(z)
 			if z == 'Empty':
 			#XMLfile = fetchXML(z)
 	# 		#print(XMLfile)
@@ -216,7 +227,7 @@ def main():
 
 			prettyjson = fullReport
 			json_str = json.dumps(prettyjson, indent=4, sort_keys = False)
-			print(json_str)
+			#print(json_str)
 	# 		#fullReport.append([x[0],x[1],companyReturns])
 		else:
 			continue	
