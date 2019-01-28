@@ -21,7 +21,7 @@ def getHistoricalFinancials(ticker,tickerDict):
 	return tempFinancials;
 
 
-def updateDict(ultparentdict, ultparentkey, parentdict, parentkey, childkey, childvalue):
+def updateDict(ultparentdict, ultparentkey, parentkey, childkey, childvalue):
 	if ultparentkey in ultparentdict:
 		parentdict = ultparentdict[ultparentkey]
 	else:
@@ -63,7 +63,8 @@ def getTickerMarkets():
 	return stockList;			
 
 def gatherURL(companyListvar):
-	RSScontents = urllib.request.urlopen("https://www.sec.gov/Archives/edgar/usgaap.rss.xml", )
+	#RSScontents = urllib.request.urlopen("https://www.sec.gov/Archives/edgar/usgaap.rss.xml", )
+	RSScontents = urllib.request.urlopen('https://www.sec.gov/Archives/edgar/monthly/xbrlrss-2018-12.xml', )
 	RSStree = ET.parse(RSScontents)
 	RSSroot = RSStree.getroot()
 	companyInfo = {}
@@ -237,29 +238,38 @@ def parseXML(perioddate, xmlfile,historicalF):
 			except:
 				continue
 			if instant != None:
-				newInstantDate = DT.strptime(instant, '%Y-%m-%d')
+				try:
+					newInstantDate = DT.strptime(instant, '%Y-%m-%d')
+				except:
+					newInstantDate = DT.now()	
 			if startDate != None:
-				newStartDate = DT.strptime(startDate, '%Y-%m-%d')
+				try:
+					newStartDate = DT.strptime(startDate, '%Y-%m-%d')
+				except:
+					newStartDate = DT.now()
 			else:
 				newStartDate = DT.now()
 			if endDate != None:
-				newEndDate = DT.strptime(endDate, '%Y-%m-%d')
+				try:
+					newEndDate = DT.strptime(endDate, '%Y-%m-%d')
+				except:
+					newEndDate = DT.now()	
 			else: 
 				newEndDate = DT.now()
 			dateDiff = newEndDate - newStartDate
 			#print(dateDiff.days)
 			if instant != None:
-				updateDictValues = updateDict(ultimateDateValues, 'As of:', dateValues,instant,x,child.text)
+				updateDictValues = updateDict(ultimateDateValues, 'As of:', instant,x,child.text)
 				ultimateDateValues = updateDictValues[0]
 				dateValues = updateDictValues[1]
 
 				#instantValues = updateDictValues[1]
 			if dateDiff.days > 1 and dateDiff.days < 100:
-				updateDictValues = updateDict(ultimateDateValues, 'Quarterly', dateValues,endDate,x,child.text)
+				updateDictValues = updateDict(ultimateDateValues, 'Quarterly', endDate,x,child.text)
 				ultimateDateValues = updateDictValues[0]
 				dateValues = updateDictValues[1]
 			elif dateDiff.days > 360 and dateDiff.days < 370:
-				updateDictValues = updateDict(ultimateDateValues, 'Annual:', dateValues,endDate,x,child.text)
+				updateDictValues = updateDict(ultimateDateValues, 'Annual:', endDate,x,child.text)
 				ultimateDateValues = updateDictValues[0]
 				dateValues = updateDictValues[1]
 				#periodValues = updateDictValues[1]
@@ -277,9 +287,14 @@ def Convert(tup, di):
 def main():
 
 	#financial_data = parseXML(XMLfile)
+	r = {}
 	with open('latestFinancialData.json', 'r') as f:
-		r = json.loads(f.read())
-		f.close()
+		try:
+			r = json.loads(f.read())
+		except:
+			pass
+		finally:	
+			f.close()
 	companyList = getTickerMarkets()
 	financial_data = {}
 	financial_data= gatherURL(companyList)
@@ -295,10 +310,13 @@ def main():
 	for key, values in financial_data.items():
 		#print('This is the URL:')
 		#print(x)
-		rr = getHistoricalFinancials(key,r)
+		if len(r) > 0:
+			rr = getHistoricalFinancials(key,r)
+		else:
+			rr = {}	
 		a = DT.strptime(values['AcceptanceDate'], "%Y%m%d%H%M%S")
 		datediff = DT.today() - a
-		if datediff.days < 8:
+		if datediff.days < 40:
 			#print(a)
 			if values['FormType'] == '10-K' or values['FormType'] == '10-Q':
 				w = DT.strptime(values['Period'], "%Y%m%d")
@@ -333,7 +351,7 @@ def main():
 		else:
 			continue			
 	prettyjson = fullReport
-	with open('latestFinancialData.json', 'w') as f:
+	with open('DecemberFinancialData.json', 'w') as f:
 		json.dump(prettyjson, f, indent=4, sort_keys = True)
 	#print(json_str)
 

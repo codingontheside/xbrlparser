@@ -13,11 +13,16 @@ financials_list = [\
 'Liabilities',\
 'CashAndCashEquivalentsAtCarryingValue',\
 'LongTermDebtCurrent',\
+'LongTermDebtNoncurrent',\
 'TotalCash',\
+'Cash',\
+'RevenueFromContractWithCustomerExcludingAssessedTax',\
 'TotalDebt',\
 'ShareholderEquity',\
 'CashAndCashEquivalentsPeriodIncreaseDecrease',\
 'CommonStockDividendsPerShareDeclared',\
+'CommonStockDividendsPerShareCashPaid',\
 'CommonStockSharesOutstanding',\
+'WeightedAverageNumberOfSharesOutstandingBasic',\
 'SharesOutstanding',\
 'EarningsPerShareBasic']
