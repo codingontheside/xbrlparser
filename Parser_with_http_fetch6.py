@@ -63,8 +63,8 @@ def getTickerMarkets():
 	return stockList;			
 
 def gatherURL(companyListvar):
-	RSScontents = urllib.request.urlopen("https://www.sec.gov/Archives/edgar/usgaap.rss.xml", )
-	#RSScontents = urllib.request.urlopen('https://www.sec.gov/Archives/edgar/monthly/xbrlrss-2018-10.xml', )
+	#RSScontents = urllib.request.urlopen("https://www.sec.gov/Archives/edgar/usgaap.rss.xml", )
+	RSScontents = urllib.request.urlopen('https://www.sec.gov/Archives/edgar/monthly/xbrlrss-2018-11.xml', )
 	RSStree = ET.parse(RSScontents)
 	RSSroot = RSStree.getroot()
 	companyInfo = {}
@@ -290,7 +290,7 @@ def main():
 
 	#financial_data = parseXML(XMLfile)
 	r = {}
-	with open('latestFinancialData2.json', 'r') as f:
+	with open('Nov2018FinancialData.json', 'r') as f:
 		try:
 			r = json.loads(f.read())
 		except:
@@ -318,7 +318,7 @@ def main():
 			rr = {}	
 		a = DT.strptime(values['AcceptanceDate'], "%Y%m%d%H%M%S")
 		datediff = DT.today() - a
-		if datediff.days < 10:
+		if datediff.days < 150:
 			#print(a)
 			if values['FormType'] == '10-K':
 				w = DT.strptime(values['Period'], "%Y%m%d")
@@ -353,7 +353,7 @@ def main():
 		else:
 			continue			
 	prettyjson = fullReport
-	with open('latestFinancialData2.json', 'w') as f:
+	with open('Nov2018FinancialData.json', 'w') as f:
 		json.dump(prettyjson, f, indent=4, sort_keys = True)
 	#print(json_str)
 

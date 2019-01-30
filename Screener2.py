@@ -2,6 +2,7 @@ import json
 from datetime import datetime as DT
 from decimal import *
 import simplejson as json
+from initialVariables_dict import screenerValues as screenerValues
 
 def getHistoricalFinancials(ticker,tickerDict):
 	if ticker in tickerDict:
@@ -10,6 +11,37 @@ def getHistoricalFinancials(ticker,tickerDict):
 	else:
 		tempFinancials = {}
 	return tempFinancials;
+
+def findScreenerMatches(screenerResults,screenerValues):
+
+	for key, keyvalue in screenerValues.items():
+		stockmatch = True
+		if key in screenerResults:
+			if keyvalue[0] == '>=':
+				if (screenerResults[key] >= keyvalue[1]):
+					stockmatch = True
+				else:
+					stockmatch = False
+					return stockmatch;
+			elif keyvalue[0] == '<=':
+				if (screenerResults[key] <= keyvalue[1]):
+					stockmatch = True
+				else:
+					stockmatch = False
+					return stockmatch;
+			elif keyvalue[0] == '==':
+				if (screenerResults[key] == keyvalue[1]):
+					stockmatch = True
+				else:
+					stockmatch = False
+					return stockmatch;
+			else:
+				stockmatch = False
+				return stockmatch;														
+		else:
+			stockmatch = False
+			return stockmatch;
+	return stockmatch;
 
 def getPricetoBookRatio(stockPrice,historicalF):
 	a = getAnnualEarnings('As of:', 'Stockholders Equity', historicalF)
@@ -53,14 +85,23 @@ def getEarningsGrowth(historicalF):
 	#dateRange = newest - oldest
 		if oldest != newest:
 			try:
-				growth = Decimal(Decimal(a[newest]) / Decimal(a[oldest])) - Decimal(1.0)
+				growth = (float(a[newest]) / float(a[oldest])) - float(1.0)
 			except ZeroDivisionError:
 				growth = None	
 		elif oldest == newest:
 			growth = None
 	else:
-		growth = None		
-	return(growth,len(a));
+		growth = None	
+
+	growthrate = 0.0
+	if growth != None:
+		growthrate = (((1+float(growth) ** (1/(len(a)-1)))-1)*100)
+		#print(type(growthrate))
+		if type(growthrate) == complex:
+			growthrate = 0.0
+		else:
+			pass		
+	return growth,len(a),growthrate;
 
 def getDividendRecord(historicalF):
 	a = getAnnualEarnings('Annual:', 'DividendsPaid',historicalF)
@@ -89,6 +130,17 @@ def getDividendRecord(historicalF):
 			continuousDividends = True
 	return continuousDividends, dividendPaid;		
 
+def getPositiveEarningsPeriod(historicalF):
+	a = getAnnualEarnings('Annual:', 'EarningsPerShare', historicalF)
+	GrowthPeriods = 0
+	for key, keyvalue in sorted(a.items(), reverse = True):
+		#print(key)
+		if float(keyvalue) > 0.0:
+			GrowthPeriods = GrowthPeriods + 1
+		else:
+			return GrowthPeriods;
+	return GrowthPeriods;			
+
 def getCurrentPEratio(stockPrice,historicalF):
 	a = getAnnualEarnings('Annual:', 'EarningsPerShare', historicalF)
 	averageAnnualEarnings = 0.0
@@ -114,7 +166,10 @@ def getCurrentRatio(historicalF):
 		current = max(periods_a)
 		aValue = float(a[current])
 		bValue = float(b[current])
-		currentRatio = float(aValue / bValue)
+		try:
+			currentRatio = float(aValue / bValue)
+		except ZeroDivisionError:
+			currentRatio = 0.0	
 	else:
 		currentRatio = 0.0
 	return(currentRatio)	
@@ -136,7 +191,7 @@ def getAnnualEarnings(period, financialtype, historicalF):
 
 def main():
 	r = {}
-	with open('latestFinancialData2.json', 'r') as f:
+	with open('Nov2018FinancialData.json', 'r') as f:
 		try:
 			r = json.loads(f.read())
 		except:
@@ -152,6 +207,7 @@ def main():
 			response = getEarningsGrowth(rr)
 			screenerResults['Earnings Growth'] = response[0]
 			screenerResults['Earnings Periods'] = response[1]
+			screenerResults['Growth Rate'] = response[2]
 			screenerResults['Current Ratio'] = getCurrentRatio(rr)
 			dividendResponse = getDividendRecord(rr)
 			screenerResults['Dividend Record'] = dividendResponse[0]
@@ -160,17 +216,9 @@ def main():
 			bookResponse = getPricetoBookRatio(ss,rr)
 			screenerResults['Market Value'] = bookResponse[1]
 			screenerResults['Price to Book'] = bookResponse[0]
-			growth = response[0]
-			periods = response[1]
-			growthrate = 0
-			if growth != None:
-				growthrate = (((1+float(growth) ** (1/(periods-1)))-1)*100)
-				#print(type(growthrate))
-				if type(growthrate) == complex:
-					growthrate = 0.0
-				screenerResults['Growth Rate'] = growthrate
-			else:
-				pass	
+			screenerResults['Growth Periods'] = getPositiveEarningsPeriod(rr)
+			screenerResults['Passes All Values'] = findScreenerMatches(screenerResults, screenerValues)
+	
 			overallResults[key] = screenerResults
 
 	else:
@@ -178,6 +226,12 @@ def main():
 	#print(overallResults)
 	json_str = json.dumps(overallResults, indent=4, sort_keys = True, use_decimal = True)
 	print(json_str)
+	for key, keyvalue in overallResults.items():
+		if keyvalue['Passes All Values'] == True:
+			print(key)
+		else:
+			continue
+
 
 
 
